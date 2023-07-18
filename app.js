@@ -1,7 +1,11 @@
-require("dotenv").config();
-const express = require("express");
-const cors = require("cors");
+import dotenv from "dotenv";
+import express from "express";
+import cors from "cors";
+
+dotenv.config();
+
 const app = express();
+
 app.use(cors({ credentials: true, origin: process.env.URL }));
 app.use("/profile", express.static("upload"));
 app.use(express.json());
@@ -11,15 +15,16 @@ app.get("/", (req, res) => {
 });
 
 // Api for QuestionAnswers
-const routes = require("./routes/questionRoute");
-app.use("/", routes);
+import questionRoutes from "./src/routes/questionRoute.js";
+app.use("/", questionRoutes);
 
 //UserInfo Working Api
-
-const routes2 = require("./routes/userRoute");
-app.use("/", routes2);
+import userRoutes from "./src/routes/userRoute.js";
+app.use("/", userRoutes);
 
 const port = process.env.PORT || 5000;
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
+
+export default app;

@@ -1,20 +1,17 @@
-const express = require("express"); //import express
-const { v4: uuidv4 } = require("uuid");
-const { s3 } = require("../config/connection");
-const router = express.Router();
-const { dynamoClient } = require("../config/connection");
+import { Router } from "express"; //import express
+import { v4 as uuidv4 } from "uuid";
+const router = Router();
 
-const {
+import {
   addOrUpdateQuestion,
   getQuestions,
   deleteQuestion,
   getQuestionById,
   getSearchResult,
   updateQuestion,
-  uploadImage,
-  deleteS3Object,
-} = require("../controller/questioninfo");
-const { upload } = require("../utils/imageStorage");
+} from "../controller/questioninfo.js";
+import { deleteS3Object, uploadImage } from "../services/questionService.js";
+import { upload } from "../utils/imageStorage.js";
 
 router.get("/questions", async (req, res) => {
   try {
@@ -62,10 +59,6 @@ router.post("/questions", upload, async (req, res) => {
     authorRole,
   } = JSON.parse(req.body.data);
 
-  // const { preview, data } = JSON.parse(req.body.image);
-  // console.log(preview);
-  //console.log(req.files);
-
   try {
     let imageLocation = [];
     let s3Keys = [];
@@ -84,7 +77,7 @@ router.post("/questions", upload, async (req, res) => {
       imageLocation: imageLocation,
       s3Keys: s3Keys,
     };
-    //console.log("addimageloc",qnavalue);
+
     const newQuestion = addOrUpdateQuestion(qnavalue);
 
     if (req.files) {
@@ -185,4 +178,4 @@ router.delete("/s3keys/:key", async (req, res) => {
   } catch (err) {}
 });
 
-module.exports = router;
+export default router;

@@ -1,16 +1,16 @@
-const express = require("express"); //import express
-const jwt = require("jsonwebtoken");
-const utils = require("../utils/utils");
-const router = express.Router();
+import { Router } from "express"; //import express
+import { verify } from "jsonwebtoken";
+import { generateToken, getCleanUser } from "../utils/utils.js";
+const router = Router();
 
-const {
+import {
   getUsers,
   login,
   addUser,
   deleteUser,
   updateUser,
   getUserById,
-} = require("../controller/userinfo");
+} from "../controller/userinfo.js";
 
 router.get("/userinfo", async (req, res) => {
   try {
@@ -39,10 +39,11 @@ router.post("/logininfo", async (req, res) => {
   try {
     const newUser = await login(req.body);
     console.log(newUser);
+    console.log(password)
     if (newUser?.Item?.password === password) {
-      const token = utils.generateToken(newUser.Item);
+      const token = generateToken(newUser.Item);
       // get basic user details
-      const userObj = utils.getCleanUser(newUser.Item);
+      const userObj = getCleanUser(newUser.Item);
       // return the token along with user details
       return res.json({ Item: userObj, token });
       //return res.json(newUser)
@@ -80,12 +81,12 @@ router.post("/userinfo", async (req, res) => {
 router.post("/tokeninfo", async (req, res) => {
   const { token } = req.body;
 
-  var decodedClaims = jwt.verify(token, process.env.JWT_SECRET);
+  var decodedClaims = verify(token, process.env.JWT_SECRET);
   const { id, password } = decodedClaims;
   try {
     const newUser = await login(decodedClaims);
     if (newUser.Item.password === password) {
-      const userObj = utils.getCleanUser(newUser.Item);
+      const userObj = getCleanUser(newUser.Item);
 
       return res.json({ Item: userObj });
       //return res.json(newUser)
@@ -124,4 +125,4 @@ router.delete("/userinfo/:id", async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;
