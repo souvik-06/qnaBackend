@@ -1,6 +1,7 @@
-import { Router } from "express"; //import express
+import { Router } from "express";
 import { verify } from "jsonwebtoken";
 import { generateToken, getCleanUser } from "../utils/utils.js";
+import { logger } from "../logger.js";
 const router = Router();
 
 import {
@@ -17,7 +18,7 @@ router.get("/userinfo", async (req, res) => {
     const users = await getUsers();
     res.json(users);
   } catch (err) {
-    console.error(err);
+    logger.error(err);
     res.status(500).json({ err: "Something went wrong" });
   }
 });
@@ -28,32 +29,27 @@ router.get("/userinfo/:id", async (req, res) => {
     const user = await getUserById(id);
     res.json(user);
   } catch (err) {
-    console.error(err);
+    logger.error(err);
     res.status(500).json({ err: "Something went wrong" });
   }
 });
 
 router.post("/logininfo", async (req, res) => {
-  const { id, password } = req.body;
-  //console.log(req.body);
+  const { password } = req.body;
   try {
     const newUser = await login(req.body);
-    console.log(newUser);
-    console.log(password)
+    logger.info(newUser);
+    logger.info(password);
     if (newUser?.Item?.password === password) {
       const token = generateToken(newUser.Item);
-      // get basic user details
       const userObj = getCleanUser(newUser.Item);
-      // return the token along with user details
       return res.json({ Item: userObj, token });
-      //return res.json(newUser)
     } else {
-      console.log("else");
-      res.status(401).json({ err: "Invalid cred Found" });
+      logger.warn("Invalid credentials found");
+      res.status(401).json({ err: "Invalid credentials found" });
     }
   } catch (err) {
-    console.log("catch");
-    console.error(err);
+    logger.error(err);
     res.status(500).json({ err: "Something went wrong" });
   }
 });
@@ -71,7 +67,7 @@ router.post("/userinfo", async (req, res) => {
     const newUser = await addUser(data);
     res.json(newUser);
   } catch (err) {
-    console.error(err);
+    logger.error(err);
     res.status(500).json({ err: err });
   }
 });
@@ -87,14 +83,13 @@ router.post("/tokeninfo", async (req, res) => {
     const newUser = await login(decodedClaims);
     if (newUser.Item.password === password) {
       const userObj = getCleanUser(newUser.Item);
-
       return res.json({ Item: userObj });
-      //return res.json(newUser)
     } else {
-      res.status(500).json({ err: "Invalid cred Found" });
+      logger.warn("Invalid credentials found");
+      res.status(500).json({ err: "Invalid credentials found" });
     }
   } catch (err) {
-    console.error(err);
+    logger.error(err);
     res.status(500).json({ err: "Something went wrong" });
   }
 });
@@ -110,7 +105,7 @@ router.put("/userinfo/:id", async (req, res) => {
     const editUser = await updateUser(user);
     res.json(editUser);
   } catch (err) {
-    console.error(err);
+    logger.error(err);
     res.status(500).json({ err: "Something went wrong" });
   }
 });
@@ -120,7 +115,7 @@ router.delete("/userinfo/:id", async (req, res) => {
   try {
     res.json(await deleteUser(id));
   } catch (err) {
-    console.error(err);
+    logger.error(err);
     res.status(500).json({ err: "Something went wrong" });
   }
 });
