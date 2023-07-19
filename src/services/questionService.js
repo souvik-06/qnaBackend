@@ -19,16 +19,23 @@ import {
   DeleteCommand,
 } from "@aws-sdk/lib-dynamodb";
 
-export const getAllQuestions = async () => {
-  const params = {
-    TableName: TABLE_NAME,
-  };
+export const getAllQuestions = async (traceId) => {
+  try {
+    const params = {
+      TableName: TABLE_NAME,
+    };
+    logger.info(
+      `TraceID:${traceId}, Fetching All Questions from DynamoDB TableName ${TABLE_NAME}`
+    );
 
-  const command = new ScanCommand(params);
-  const response = await dynamoClient.send(command);
-  const questions = response;
+    const command = new ScanCommand(params);
+    const response = await dynamoClient.send(command);
+    const questions = response;
 
-  return questions;
+    return questions;
+  } catch (error) {
+    logger.error(`TraceID:${traceId}, Error:${error}`);
+  }
 };
 
 // export const getQstnById = async (id) => {
@@ -41,36 +48,51 @@ export const getAllQuestions = async () => {
 //   return await dynamoClient.get(params).promise();
 // };
 
-export const getQstnById = async (id) => {
-  const params = {
-    TableName: TABLE_NAME,
-    Key: {
-      questionId: id,
-    },
-  };
+export const getQstnById = async (id, traceId) => {
+  try {
+    logger.info(
+      `TraceID:${traceId}, Fetching Specific Question from DynamoDB TableName ${TABLE_NAME}`
+    );
+    const params = {
+      TableName: TABLE_NAME,
+      Key: {
+        questionId: id,
+      },
+    };
 
-  const command = new GetCommand(params);
-  const response = await dynamoClient.send(command);
-  const question = response;
+    const command = new GetCommand(params);
+    const response = await dynamoClient.send(command);
+    const question = response;
 
-  return question;
+    return question;
+  } catch (error) {
+    logger.error(`TraceID:${traceId}, Error:${error}`);
+  }
 };
 
 //Api for searching
-export const getSrchResult = async (data) => {
-  const params = {
-    TableName: TABLE_NAME,
-    FilterExpression: "contains(qa, :qa)",
-    ExpressionAttributeValues: {
-      ":qa": data,
-    },
-  };
+export const getSrchResult = async (data, traceId) => {
+  try {
+    logger.info(
+      `TraceID:${traceId}, Fetching from DynamoDB TableName ${TABLE_NAME}`
+    );
 
-  const command = new ScanCommand(params);
-  const response = await dynamoClient.send(command);
-  const result = response;
+    const params = {
+      TableName: TABLE_NAME,
+      FilterExpression: "contains(qa, :qa)",
+      ExpressionAttributeValues: {
+        ":qa": data,
+      },
+    };
 
-  return result;
+    const command = new ScanCommand(params);
+    const response = await dynamoClient.send(command);
+    const result = response;
+
+    return result;
+  } catch (error) {
+    logger.error(`TraceID:${traceId}, Error:${error}`);
+  }
 };
 
 // export const addOrUpdateQstn = async (question) => {
@@ -81,14 +103,21 @@ export const getSrchResult = async (data) => {
 //   return await dynamoClient.put(params).promise();
 // };
 
-export const addOrUpdateQstn = async (question) => {
-  const params = {
-    TableName: TABLE_NAME,
-    Item: question,
-  };
+export const addOrUpdateQstn = async (question, traceId) => {
+  try {
+    logger.info(
+      `TraceID:${traceId}, Adding Question To DynamoDB TableName:${TABLE_NAME}`
+    );
+    const params = {
+      TableName: TABLE_NAME,
+      Item: question,
+    };
 
-  const command = new PutCommand(params);
-  return await dynamoClient.send(command);
+    const command = new PutCommand(params);
+    return await dynamoClient.send(command);
+  } catch (error) {
+    logger.error(`TraceID:${traceId}, Error:${error}`);
+  }
 };
 
 // export const updateQstn = async (question, imageLocation) => {
@@ -117,29 +146,36 @@ export const addOrUpdateQstn = async (question) => {
 //   return await dynamoClient.update(params).promise();
 // };
 
-export const updateQstn = async (question, imageLocation) => {
-  const params = {
-    TableName: TABLE_NAME,
-    Key: {
-      questionId: question.id,
-    },
-    UpdateExpression:
-      "SET question = :q, answer = :a, qa = :qa, dateLog = :dt, secondary = :sc, imageLocation = :imgl, createdBy = :cb, authorRole = :ar",
-    ExpressionAttributeValues: {
-      ":q": question.question,
-      ":a": question.answer,
-      ":qa":
-        question.question.toLowerCase() + " " + question.answer.toLowerCase(),
-      ":dt": question.dateLog,
-      ":sc": question.secondary,
-      ":imgl": [...imageLocation, ...question.imgLocation],
-      ":cb": question.createdBy,
-      ":ar": question.authorRole,
-    },
-  };
+export const updateQstn = async (question, imageLocation, traceId) => {
+  try {
+    logger.info(
+      `TraceID:${traceId}, Updating Qestion to DynamoDB TableName:${TABLE_NAME}`
+    );
+    const params = {
+      TableName: TABLE_NAME,
+      Key: {
+        questionId: question.id,
+      },
+      UpdateExpression:
+        "SET question = :q, answer = :a, qa = :qa, dateLog = :dt, secondary = :sc, imageLocation = :imgl, createdBy = :cb, authorRole = :ar",
+      ExpressionAttributeValues: {
+        ":q": question.question,
+        ":a": question.answer,
+        ":qa":
+          question.question.toLowerCase() + " " + question.answer.toLowerCase(),
+        ":dt": question.dateLog,
+        ":sc": question.secondary,
+        ":imgl": [...imageLocation, ...question.imgLocation],
+        ":cb": question.createdBy,
+        ":ar": question.authorRole,
+      },
+    };
 
-  const command = new UpdateCommand(params);
-  return await dynamoClient.send(command);
+    const command = new UpdateCommand(params);
+    return await dynamoClient.send(command);
+  } catch (error) {
+    logger.error(`TraceID:${traceId}, Error:${error}`);
+  }
 };
 
 // export const deleteQstn = async (id) => {
@@ -153,16 +189,23 @@ export const updateQstn = async (question, imageLocation) => {
 //   return await dynamoClient.delete(params).promise();
 // };
 
-export const deleteQstn = async (id) => {
-  const params = {
-    TableName: TABLE_NAME,
-    Key: {
-      questionId: id,
-    },
-  };
+export const deleteQstn = async (id, traceId) => {
+  try {
+    logger.info(
+      `TraceID:${traceId}, Deleting QuestionID:${id} from DynamoDB TableName:${TABLE_NAME}`
+    );
+    const params = {
+      TableName: TABLE_NAME,
+      Key: {
+        questionId: id,
+      },
+    };
 
-  const command = new DeleteCommand(params);
-  return await dynamoClient.send(command);
+    const command = new DeleteCommand(params);
+    return await dynamoClient.send(command);
+  } catch (error) {
+    logger.error(`TraceID:${traceId}, Error:${error}`);
+  }
 };
 
 // export const deleteS3Object = async (objectKey) => {
@@ -181,9 +224,13 @@ export const deleteQstn = async (id) => {
 // };
 
 import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
+import { logger } from "../logger.js";
 
-export const deleteS3Object = async (objectKey) => {
+export const deleteS3Object = async (objectKey, traceId) => {
   try {
+    logger.info(
+      `TraceID:${traceId}, Deleting from s3Bucket ${process.env.AWS_BUCKET_NAME}`
+    );
     const params = {
       Bucket: process.env.AWS_BUCKET_NAME,
       Key: objectKey,
@@ -191,10 +238,8 @@ export const deleteS3Object = async (objectKey) => {
 
     const command = new DeleteObjectCommand(params);
     const response = await s3.send(command);
-
-    console.log(response); // successful response
   } catch (error) {
-    console.error("Error deleting object:", error);
+    logger.error(`TraceID:${traceId}, Error:${error}`);
   }
 };
 
@@ -246,10 +291,13 @@ export const deleteS3Object = async (objectKey) => {
 //   });
 // };
 
-export const uploadImage = async (file, id) => {
+export const uploadImage = async (file, id, traceId) => {
   const uniqueId = uuidv4();
 
   try {
+    logger.info(
+      `TraceID:${traceId}, Uploading Image to s3Bucket ${process.env.AWS_BUCKET_NAME}`
+    );
     const uploadParams = {
       Bucket: process.env.AWS_BUCKET_NAME,
       Key: uniqueId + file.originalname,
@@ -282,11 +330,10 @@ export const uploadImage = async (file, id) => {
     const updateCommand = new UpdateCommand(updateParams);
     const updateResponse = await dynamoClient.send(updateCommand);
 
-    console.log("Item updated successfully:", updateResponse);
+    logger.info(`TraceID:${traceId}, Uploaded Image Successfully`);
 
     return updateResponse;
   } catch (error) {
-    console.error("Error uploading image:", error);
-    throw error;
+    logger.error(`TraceID:${traceId}, Error:${error}`);
   }
 };
