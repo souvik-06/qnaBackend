@@ -5,34 +5,39 @@ import {
   addOrUpdateQstn,
   updateQstn,
   deleteQstn,
-} from "../services/questionService.js";
+} from "../services/questionService";
 
-export const getQuestions = async (traceId) => {
+export const getQuestions = async (traceId: number) => {
   const questions = getAllQuestions(traceId);
   return questions;
 };
 
-export const getQuestionById = async (id, traceId) => {
+export const getQuestionById = async (id: string, traceId: number) => {
   const question = getQstnById(id, traceId);
   return question;
 };
 
 //Api for searching
-export const getSearchResult = async (data, traceId) => {
+export const getSearchResult = async (data: string, traceId: number) => {
   const question = getSrchResult(data, traceId);
   return question;
 };
 
-export const addOrUpdateQuestion = async (question, traceId) => {
+export const addOrUpdateQuestion = async (question:any, traceId: number) => {
   const qstn = addOrUpdateQstn(question, traceId);
   return qstn;
 };
-export const updateQuestion = async (question, imageLocation, traceId) => {
+
+export const updateQuestion = async (
+  question,
+  imageLocation: string[],
+  traceId: number
+) => {
   const qstn = updateQstn(question, imageLocation, traceId);
   return qstn;
 };
 
-export const deleteQuestion = async (id, traceId) => {
+export const deleteQuestion = async (id: string, traceId: number) => {
   const qstn = deleteQstn(id, traceId);
   return qstn;
 };

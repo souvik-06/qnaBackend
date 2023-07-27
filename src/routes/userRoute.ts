@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { verify } from "jsonwebtoken";
-import { generateToken, getCleanUser } from "../utils/utils.js";
-import { logger } from "../logger.js";
+import { generateToken, getCleanUser } from "../utils/utils";
+import { logger } from "../logger";
 const router = Router();
 
 import {
@@ -11,7 +11,7 @@ import {
   deleteUser,
   updateUser,
   getUserById,
-} from "../controller/userinfo.js";
+} from "../controller/userinfo";
 
 router.get("/userinfo", async (req, res) => {
   try {
@@ -40,10 +40,15 @@ router.post("/logininfo", async (req, res) => {
     const newUser = await login(req.body);
     logger.info(newUser);
     logger.info(password);
-    if (newUser?.Item?.password === password) {
-      const token = generateToken(newUser.Item);
-      const userObj = getCleanUser(newUser.Item);
-      return res.json({ Item: userObj, token });
+    if (newUser.password === password) {
+      const token = generateToken(newUser);
+      const userObj = getCleanUser(newUser);
+      const usr = {
+        id: userObj?.id,
+        fullName: userObj?.fullName,
+        rolePosition: userObj?.rolePosition,
+      };
+      return res.json({ Item: usr, token });
     } else {
       logger.warn("Invalid credentials found");
       res.status(401).json({ err: "Invalid credentials found" });
@@ -77,13 +82,18 @@ router.post("/userinfo", async (req, res) => {
 router.post("/tokeninfo", async (req, res) => {
   const { token } = req.body;
 
-  var decodedClaims = verify(token, process.env.JWT_SECRET);
+  var decodedClaims: any = verify(token, process.env.JWT_SECRET || "");
   const { id, password } = decodedClaims;
   try {
-    const newUser = await login(decodedClaims);
-    if (newUser.Item.password === password) {
-      const userObj = getCleanUser(newUser.Item);
-      return res.json({ Item: userObj });
+    const newUser: any = await login(decodedClaims);
+    if (newUser.password === password) {
+      const userObj = getCleanUser(newUser);
+      const usr = {
+        id: userObj?.id,
+        fullName: userObj?.fullName,
+        rolePosition: userObj?.rolePosition,
+      };
+      return res.json({ Item: usr });
     } else {
       logger.warn("Invalid credentials found");
       res.status(500).json({ err: "Invalid credentials found" });

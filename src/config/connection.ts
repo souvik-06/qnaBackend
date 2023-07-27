@@ -17,10 +17,13 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import { S3Client } from "@aws-sdk/client-s3";
 import { config as dotenvConfig } from "dotenv";
+import { KMSClient, EncryptCommand, DecryptCommand } from "@aws-sdk/client-kms";
 
 dotenvConfig();
 
 const region = process.env.AWS_REGION;
+
+const kmsClient = new KMSClient({ region: region });
 
 const dynamoClient = DynamoDBDocumentClient.from(
   new DynamoDBClient({ region })
@@ -28,6 +31,4 @@ const dynamoClient = DynamoDBDocumentClient.from(
 
 const s3 = new S3Client({ region });
 
-export { dynamoClient, s3 };
-
-
+export { dynamoClient, s3, kmsClient };

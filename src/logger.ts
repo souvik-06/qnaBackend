@@ -23,6 +23,6 @@ export const logger = createLogger({
   ),
   transports: [
     new transports.Console(), // Output logs to the console
-    new transports.File({ filename: "logs.log" }), // Output logs to a file
+    // new transports.File({ filename: "logs.log" }), // Output logs to a file
   ],
 });

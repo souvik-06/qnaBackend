@@ -14,7 +14,7 @@ export const generateToken = (user) => {
     rolePosition: user.rolePosition,
   };
 
-  return jwt.sign(u, process.env.JWT_SECRET, {
+  return jwt.sign(u, process.env.JWT_SECRET || "", {
     expiresIn: 60 * 60 * 24, // expires in 24 hours
   });
 };
@@ -30,4 +30,3 @@ export const getCleanUser = (user) => {
     rolePosition: user.rolePosition,
   };
 };
-

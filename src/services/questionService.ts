@@ -1,5 +1,8 @@
-import { dynamoClient, s3 } from "../config/connection.js";
+import { dynamoClient, s3 } from "../config/connection";
 import { v4 as uuidv4 } from "uuid";
+import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
+import { logger } from "../logger";
+import { question } from "../types/type";
 
 const TABLE_NAME = "QuestionAnswer";
 
@@ -19,7 +22,7 @@ import {
   DeleteCommand,
 } from "@aws-sdk/lib-dynamodb";
 
-export const getAllQuestions = async (traceId) => {
+export const getAllQuestions = async (traceId: number) => {
   try {
     const params = {
       TableName: TABLE_NAME,
@@ -48,7 +51,7 @@ export const getAllQuestions = async (traceId) => {
 //   return await dynamoClient.get(params).promise();
 // };
 
-export const getQstnById = async (id, traceId) => {
+export const getQstnById = async (id: string, traceId: number) => {
   try {
     logger.info(
       `TraceID:${traceId}, Fetching Specific Question from DynamoDB TableName ${TABLE_NAME}`
@@ -71,7 +74,7 @@ export const getQstnById = async (id, traceId) => {
 };
 
 //Api for searching
-export const getSrchResult = async (data, traceId) => {
+export const getSrchResult = async (data: string, traceId: number) => {
   try {
     logger.info(
       `TraceID:${traceId}, Fetching from DynamoDB TableName ${TABLE_NAME}`
@@ -103,7 +106,7 @@ export const getSrchResult = async (data, traceId) => {
 //   return await dynamoClient.put(params).promise();
 // };
 
-export const addOrUpdateQstn = async (question, traceId) => {
+export const addOrUpdateQstn = async (question: question, traceId: number) => {
   try {
     logger.info(
       `TraceID:${traceId}, Adding Question To DynamoDB TableName:${TABLE_NAME}`
@@ -146,7 +149,11 @@ export const addOrUpdateQstn = async (question, traceId) => {
 //   return await dynamoClient.update(params).promise();
 // };
 
-export const updateQstn = async (question, imageLocation, traceId) => {
+export const updateQstn = async (
+  question: any,
+  imageLocation: string[],
+  traceId: number
+) => {
   try {
     logger.info(
       `TraceID:${traceId}, Updating Qestion to DynamoDB TableName:${TABLE_NAME}`
@@ -189,7 +196,7 @@ export const updateQstn = async (question, imageLocation, traceId) => {
 //   return await dynamoClient.delete(params).promise();
 // };
 
-export const deleteQstn = async (id, traceId) => {
+export const deleteQstn = async (id: string, traceId: number) => {
   try {
     logger.info(
       `TraceID:${traceId}, Deleting QuestionID:${id} from DynamoDB TableName:${TABLE_NAME}`
@@ -223,16 +230,11 @@ export const deleteQstn = async (id, traceId) => {
 //   }
 // };
 
-import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
-import { logger } from "../logger.js";
-
-export const deleteS3Object = async (objectKey, traceId) => {
+export const deleteS3Object = async (objectKey: string, traceId: number) => {
   try {
-    logger.info(
-      `TraceID:${traceId}, Deleting from s3Bucket ${process.env.AWS_BUCKET_NAME}`
-    );
+    logger.info(`TraceID:${traceId}, Deleting from s3Bucket ${objectKey}`);
     const params = {
-      Bucket: process.env.AWS_BUCKET_NAME,
+      Bucket: process.env.S3_BUCKET_NAME,
       Key: objectKey,
     };
 
@@ -291,15 +293,15 @@ export const deleteS3Object = async (objectKey, traceId) => {
 //   });
 // };
 
-export const uploadImage = async (file, id, traceId) => {
+export const uploadImage = async (file: any, id: string, traceId: number) => {
   const uniqueId = uuidv4();
 
   try {
     logger.info(
-      `TraceID:${traceId}, Uploading Image to s3Bucket ${process.env.AWS_BUCKET_NAME}`
+      `TraceID:${traceId}, Uploading Image to s3Bucket ${process.env.S3_BUCKET_NAME}`
     );
     const uploadParams = {
-      Bucket: process.env.AWS_BUCKET_NAME,
+      Bucket: process.env.S3_BUCKET_NAME,
       Key: uniqueId + file.originalname,
       Body: file.buffer,
       ContentType: file.type,
@@ -321,7 +323,7 @@ export const uploadImage = async (file, id, traceId) => {
       },
       ExpressionAttributeValues: {
         ":newString": [
-          `https://${uploadParams.Bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`,
+          `https://${uploadParams.Bucket}.s3.${process.env.MY_REGION}.amazonaws.com/${uploadParams.Key}`,
         ],
         ":newData": [uniqueId + file.originalname],
       },
@@ -335,5 +337,60 @@ export const uploadImage = async (file, id, traceId) => {
     return updateResponse;
   } catch (error) {
     logger.error(`TraceID:${traceId}, Error:${error}`);
+  }
+};
+
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+
+export const getSignedURL = async (
+  id: any,
+  fileName: any,
+  contentType: any,
+  questionId: any
+) => {
+  const uniqueId = uuidv4();
+  console.log(fileName, contentType);
+  try {
+    // Now you can use the expirationDate in your params
+    const params = {
+      Bucket: process.env.S3_BUCKET_NAME,
+      Key: uniqueId + fileName,
+      ContentType: contentType,
+    };
+
+    const command = new PutObjectCommand(params);
+    const signedUrl = await getSignedUrl(s3, command);
+    //console.log(signedUrl);
+    const updateParams = {
+      TableName: "QuestionAnswer",
+      Key: {
+        questionId: questionId,
+      },
+      UpdateExpression:
+        "SET #listAttr = list_append(#listAttr, :newString), #anotherAttr = list_append(#anotherAttr, :newData)",
+      ExpressionAttributeNames: {
+        "#listAttr": "imageLocation",
+        "#anotherAttr": "s3Keys",
+      },
+      ExpressionAttributeValues: {
+        ":newString": [
+          `https://${params.Bucket}.s3.${process.env.MY_REGION}.amazonaws.com/${params.Key}`,
+        ],
+        ":newData": [params.Key],
+      },
+    };
+
+    const updateCommand = new UpdateCommand(updateParams);
+    await dynamoClient.send(updateCommand);
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ url: signedUrl }),
+    };
+  } catch (error) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ message: "Error generating presigned URL" }),
+    };
   }
 };

@@ -1,0 +1,44 @@
+service: qnabackend
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  apiGateway:
+    binaryMediaTypes:
+      - "*/*"
+
+  ecr:
+    images:
+      appimage:
+        path: ./
+
+  region: ap-south-1
+
+  iamRoleStatements:
+    - Effect: Allow
+      Action: "dynamodb:*"
+      Resource: "arn:aws:dynamodb:ap-south-1:574105079369:table/QuestionAnswer"
+
+    - Effect: Allow
+      Action: "s3:*"
+      Resource: "arn:aws:s3:::team2backendbucket/*"
+
+plugins:
+  - serverless-offline
+  - serverless-dotenv-plugin
+
+custom:
+  dotenv:
+    path: .env
+
+functions:
+  qnaBackend:
+    image: 574105079369.dkr.ecr.ap-south-1.amazonaws.com/qnabackend:latest
+    events:
+      - http:
+          method: any
+          path: /{any+}
+          cors:
+            origin: "https://d3pbkmrjaiyic6.cloudfront.net"
+            allowCredentials: true

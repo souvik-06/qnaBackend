@@ -5,14 +5,14 @@ import {
   addUsr,
   updateUsr,
   deleteUsr,
-} from "../services/userServices.js";
+} from "../services/userServices";
 
 export const getUsers = async () => {
   const questions = getUsrs();
   return questions;
 };
 
-export const getUserById = async (id) => {
+export const getUserById = async (id:string) => {
   const questions = getUsrById(id);
   return questions;
 };

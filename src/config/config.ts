@@ -6,8 +6,8 @@ export const aws_local_config = {
     secretAccessKey: "fakeSecretAccessKey",
   },
 };
-export const aws_remote_config = {
-  accessKeyId: process.env.ACCESS_KEY_ID,
-  secretAccessKey: process.env.ACCESS_SECRET_KEY,
-  region: process.env.AWS_REGION,
-};
+// export const aws_remote_config = {
+//   accessKeyId: process.env.ACCESS_KEY_ID,
+//   secretAccessKey: process.env.ACCESS_SECRET_KEY,
+//   region: process.env.AWS_REGION,
+// };
